@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v \"css\\\\|^\\\\s*/\\\\*\\\\|<style\\\\|img\\\\|svg\\\\|url\\(\")",
+      "Bash(node *)",
+      "Bash(python *)",
+      "Bash(dir \"C:\\\\Users\\\\Dell\\\\OneDrive\\\\Desktop\\\\MS Doors&Windows\")",
+      "Bash(curl -s http://localhost:8765/index.html)",
+      "Bash(pkill -f \"python -m http.server 8765\")",
+      "Bash(python -m http.server 8766)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8766/index.html)",
+      "Bash(pkill -f \"python -m http.server 8766\")",
+      "Bash(python -m http.server 8767)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8767/index.html)",
+      "Bash(pkill -f \"python -m http.server 8767\")",
+      "Bash(python -m http.server 8768)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8768/index.html)",
+      "Bash(pkill -f \"python -m http.server 8768\")",
+      "Bash(python -m http.server 8769)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8769/index.html)",
+      "Bash(pkill -f \"python -m http.server 8769\")",
+      "Bash(awk -F: '$1 > 2100 && $1 < 2200')",
+      "Bash(awk -F: '$1 < 2114')",
+      "Bash(awk -F: '$1 < 2158')",
+      "Bash(awk -F: '$1 < 2244')",
+      "Bash(mkdir -p jstest)",
+      "Bash(sed -n '/<script>/,/<\\\\/script>/p' index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8765/index.html)"
+    ]
+  }
+}
