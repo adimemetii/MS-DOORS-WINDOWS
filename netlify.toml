@@ -1,0 +1,13 @@
+# Netlify configuration for MS Doors & Windows
+# Static site (index.html at repo root) + serverless functions.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# The GROQ_API_KEY is configured in the Netlify UI
+# (Site settings → Environment variables) and is read
+# ONLY inside netlify/functions/chat.js — never exposed to the frontend.

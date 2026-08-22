@@ -12,8 +12,13 @@
     <link rel="icon" type="image/png" sizes="1024x1024" href="assets/favicon.png">
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-256.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <!-- Font Awesome is critical for visible icons: loaded normally.
+         Animate.css is purely decorative: loaded asynchronously so it never
+         blocks the first paint of the page. -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></noscript>
     <style>
         /* Base Reset */
         * {
@@ -114,10 +119,10 @@
             --shadow: rgba(0,0,0,0.1);
         }
 
-        @font-face {
-            font-family: 'Montserrat';
-            src: url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-        }
+        /* Removed invalid @font-face: it pointed at a Google Fonts CSS URL as a
+           font source, which browsers can never load. The site has always
+           rendered with the Helvetica/Arial fallback stack, so removing it
+           eliminates a wasted network request with zero visual change. */
 
         body {
             background-color: var(--bg-color);
@@ -361,9 +366,9 @@
             width: 100%;
             position: relative;
             z-index: 2;
-            transform-style: preserve-3d;
-            perspective: 1000px;
-            animation: hero-3d-float 6s ease-in-out infinite;
+            /* Infinite 3D float removed: its visual effect was imperceptible
+               (rotateY 1deg / translateZ 20px) but it forced constant
+               compositing over the playing video and caused load-time jank. */
         }
 
         .hero h1 {
@@ -414,8 +419,9 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin: 0 auto;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            /* backdrop-filter removed: live-blurring the video behind the
+               button on every frame was the main cause of the entrance lag.
+               The glow box-shadows keep the identical glassy look. */
             box-shadow: 0 0 20px rgba(148, 137, 121, 0.2), inset 0 0 20px rgba(148, 137, 121, 0.1);
         }
         
@@ -442,19 +448,23 @@
             opacity: 1;
         }
 
+        /* Shine sweep now animates transform (GPU-composited) instead of
+           "left" (which triggered layout on every frame) — buttery smooth. */
         .btn::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(184, 168, 150, 0.4), transparent);
-            transition: 0.5s;
+            transform: translateX(-101%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
         }
 
         .btn:hover::before {
-            left: 100%;
+            transform: translateX(101%);
         }
 
 
@@ -567,11 +577,13 @@
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(184, 168, 150, 0.15), transparent);
-            transition: left 0.5s ease;
+            transform: translateX(-101%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
         }
 
         .show-more-btn:hover {
@@ -581,7 +593,7 @@
         }
         
         .show-more-btn:hover::before {
-            left: 100%;
+            transform: translateX(101%);
         }
 
         .catalog-item {
@@ -1216,11 +1228,13 @@
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(184, 168, 150, 0.15), transparent);
-            transition: left 0.5s ease;
+            transform: translateX(-101%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
         }
 
         .submit-btn:hover {
@@ -1230,7 +1244,7 @@
         }
         
         .submit-btn:hover::before {
-            left: 100%;
+            transform: translateX(101%);
         }
 
         /* Map Section */
@@ -1635,12 +1649,16 @@
         }
 
         /* Animation Classes */
+        /* will-change promotes these to their own compositor layers so the
+           infinite transforms never trigger repaints of the hero text. */
         .pulse {
             animation: pulse 3s infinite ease-in-out;
+            will-change: transform;
         }
 
         .float-horizontal {
             animation: floatHorizontal 6s infinite ease-in-out;
+            will-change: transform;
         }
 
         .rotate {
@@ -3497,7 +3515,11 @@
 
     <!-- Hero Section -->
     <section class="hero" id="home">
-        <video id="heroVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" class="hero-video" controls="false" disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false;">
+        <!-- Hero background video: autoplays on desktop AND mobile (muted +
+             playsinline allow autoplay without any user interaction, so no
+             Play button is ever needed). No poster image: only the video
+             itself is shown as the background. -->
+        <video id="heroVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" class="hero-video" controls="false" disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false;" aria-hidden="true">
             <source src="assets/video2.mp4" type="video/mp4">
         </video>
         <div class="hero-content">
@@ -3539,7 +3561,7 @@
                 <!-- Door 1 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door1')">
                     <div class="catalog-img-container">
-                        <img src="assets/foto16.png" alt="Aurora" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto16.png" alt="Aurora" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Aurora</h3>
@@ -3551,7 +3573,7 @@
                 <!-- Door 2 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door2')" style="animation-delay: 0.2s">
                     <div class="catalog-img-container">
-                        <img src="assets/foto14.png" alt="Elegance" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto14.png" alt="Elegance" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Elegance</h3>
@@ -3597,7 +3619,7 @@
                 <!-- Door 3 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door3')" style="animation-delay: 0.4s">
                     <div class="catalog-img-container">
-                        <img src="assets/foto7.png" alt="Privata" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto7.png" alt="Privata" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Privata</h3>
@@ -3609,7 +3631,7 @@
                 <!-- Door 4 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door4')" style="animation-delay: 0.6s">
                     <div class="catalog-img-container">
-                        <img src="assets/foto9.png" alt="Polaris" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto9.png" alt="Polaris" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Polaris</h3>
@@ -3621,7 +3643,7 @@
                 <!-- Door 5 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door5')" style="animation-delay: 0.8s">
                     <div class="catalog-img-container">
-                        <img src="assets/foto10.png" alt="Verticalis" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto10.png" alt="Verticalis" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Verticalis</h3>
@@ -3633,7 +3655,7 @@
                 <!-- Door 6 -->
                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door6')" style="animation-delay: 1s">
                     <div class="catalog-img-container">
-                        <img src="assets/foto15.png" alt="Architectura" class="catalog-img">
+                        <img loading="lazy" decoding="async" src="assets/foto15.png" alt="Architectura" class="catalog-img">
                     </div>
                     <div class="catalog-info">
                         <h3>Architectura</h3>
@@ -3644,7 +3666,7 @@
                                 <!-- Door 7 -->
                                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door7')" style="animation-delay: 1.2s">
                                     <div class="catalog-img-container">
-                                        <img src="assets/foto21.png" alt="Crystal" class="catalog-img">
+                                        <img loading="lazy" decoding="async" src="assets/foto21.png" alt="Crystal" class="catalog-img">
                                     </div>
                                     <div class="catalog-info">
                                         <h3>Crystal</h3>
@@ -3656,7 +3678,7 @@
                                 <!-- Door 8 -->
                                 <div class="catalog-item animate__animated animate__fadeInUp glowing-border" onclick="openDoorDetails('door8')" style="animation-delay: 1.4s">
                                     <div class="catalog-img-container">
-                                        <img src="assets/foto18.png" alt="Minimalis" class="catalog-img">
+                                        <img loading="lazy" decoding="async" src="assets/foto18.png" alt="Minimalis" class="catalog-img">
                                     </div>
                                     <div class="catalog-info">
                                         <h3>Minimalis</h3>
@@ -3675,10 +3697,12 @@
                             <h2 class="section-title animate__animated animate__fadeIn">MJESHTËRIA ARTIZANALE</h2>
                             <p class="animate__animated animate__fadeIn" style="animation-delay: 0.3s">Shikoni procesin pas elementeve tona arkitekturore </p>
                             <div class="video-wrapper animate__animated animate__fadeIn hover-grow" style="animation-delay: 0.6s">
-<video autoplay muted loop>
-                                    <source src="assets/video2.mp4" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
+<!-- Exhibition video: same 3.5MB file as the hero — lazy-loaded via JS only
+                                     when this section scrolls near the viewport,
+                                     so it never competes with the initial page load. -->
+                                    <video muted loop playsinline preload="none" data-src="assets/video2.mp4" aria-label="Video e mjeshtërisë artizanale">
+                                        Your browser does not support the video tag.
+                                    </video>
                             </div>
                         </div>
                     </section>
@@ -3689,51 +3713,51 @@
                             <h2 class="section-title animate__animated animate__fadeIn">PROJEKTET TONA</h2>
                             <div class="gallery-grid">
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow">
-                                    <img src="assets/imazhe1.jpg" alt="Projekt Vila Luksoze" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe1.jpg" alt="Projekt Vila Luksoze" class="gallery-img">
                                     <div class="gallery-caption">Projekti 1 - (I realizuar ne Rothrist-Zvicerr)</div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 0.2s">
-                                    <img src="assets/imazhe2.jpg" alt="Instalim Loft Urban" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe2.jpg" alt="Instalim Loft Urban" class="gallery-img">
                                     <div class="gallery-caption">Projekti 2 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 0.4s">
-                                    <img src="assets/imazhe10.jpg" alt="Kompleks Komercial" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe10.jpg" alt="Kompleks Komercial" class="gallery-img">
                                     <div class="gallery-caption">Projekti 3 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 0.6s">
-                                    <img src="assets/imazhe7.jpg" alt="Shtëpi Malore" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe7.jpg" alt="Shtëpi Malore" class="gallery-img">
                                     <div class="gallery-caption">Projekti 4 - (I realizuar ne Rothrist-Zvicerr) </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 0.8s">
-                                    <img src="assets/imazhe5.jpg" alt="Rinovim Historik" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe5.jpg" alt="Rinovim Historik" class="gallery-img">
                                     <div class="gallery-caption">Projekti 5 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 1s">
-                                    <img src="assets/imazhe6.jpg" alt="Rezidencë Pranë Plazhit" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe6.jpg" alt="Rezidencë Pranë Plazhit" class="gallery-img">
                                     <div class="gallery-caption">Projekti 6  </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 1.2s">
-                                    <img src="assets/imazhe4.jpg" alt="Vila Luksoze" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe4.jpg" alt="Vila Luksoze" class="gallery-img">
                                     <div class="gallery-caption">Projekti 7 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 1.4s">
-                                    <img src="assets/imazhe8.jpg" alt="Loft Urban" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe8.jpg" alt="Loft Urban" class="gallery-img">
                                     <div class="gallery-caption">Projekti 8  </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 1.6s">
-                                    <img src="assets/imazhe9.jpg" alt="Projekt Vila Luksoze" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe9.jpg" alt="Projekt Vila Luksoze" class="gallery-img">
                                     <div class="gallery-caption">Projekti 9 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 1.8s">
-                                    <img src="assets/imazhe3.jpg" alt="Instalim Loft Urban" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe3.jpg" alt="Instalim Loft Urban" class="gallery-img">
                                     <div class="gallery-caption">Projekti 10  </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 2s">
-                                    <img src="assets/imazhe11.jpg" alt="Kompleks Komercial" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe11.jpg" alt="Kompleks Komercial" class="gallery-img">
                                     <div class="gallery-caption">Projekti 11 </div>
                                 </div>
                                 <div class="gallery-item animate__animated animate__fadeInUp hover-grow" style="animation-delay: 2.2s">
-                                    <img src="assets/imazhe12.jpg" alt="Shtëpi Malore" class="gallery-img">
+                                    <img loading="lazy" decoding="async" src="assets/imazhe12.jpg" alt="Shtëpi Malore" class="gallery-img">
                                     <div class="gallery-caption">Projekti 12 
  </div>
                                 </div>
@@ -3778,23 +3802,23 @@
         <div class="partners-logos-wrapper">
         <div class="partners-logos-3d">
             <div class="partner-logo-3d">
-                <img src="assets/company1.png" alt="Company 1" />
+                <img loading="lazy" decoding="async" src="assets/company1.png" alt="Company 1" />
             </div>
             <div class="partner-logo-3d">
-                <img src="assets/company4.png" alt="Company 4" />
+                <img loading="lazy" decoding="async" src="assets/company4.png" alt="Company 4" />
             </div>
             <div class="partner-logo-3d">
-                <img src="assets/company3.png" alt="Company 3" />
+                <img loading="lazy" decoding="async" src="assets/company3.png" alt="Company 3" />
             </div>
             <!-- Duplicate for seamless loop -->
             <div class="partner-logo-3d">
-                <img src="assets/company1.png" alt="Company 1" />
+                <img loading="lazy" decoding="async" src="assets/company1.png" alt="Company 1" />
             </div>
             <div class="partner-logo-3d">
-                <img src="assets/company4.png" alt="Company 4" />
+                <img loading="lazy" decoding="async" src="assets/company4.png" alt="Company 4" />
             </div>
             <div class="partner-logo-3d">
-                <img src="assets/company3.png" alt="Company 3" />
+                <img loading="lazy" decoding="async" src="assets/company3.png" alt="Company 3" />
             </div>
         </div>
         </div>
@@ -3857,7 +3881,7 @@
                     <!-- Footer -->
                     <footer>
                         <div class="footer-content">
-                            <img src="assets/logo.jpg" alt="MS Doors & Windows" class="footer-logo hover-grow">
+                            <img loading="lazy" decoding="async" src="assets/logo.jpg" alt="MS Doors & Windows" class="footer-logo hover-grow">
                             <div class="company-name">MS DOORS & WINDOWS</div>
                             <div class="footer-links">
                                 <a href="#home">Kryefaqja</a>
@@ -3911,9 +3935,15 @@
                     <!-- JavaScript -->
                     <script>
                         // Fast falling elements effect - Grey Bubbles
+                        // Optimized: fewer bubbles on small screens, skipped for
+                        // reduced-motion users, batched DOM insertion, and paused
+                        // while the tab is hidden to save CPU/battery.
                         function createBubbles() {
                             const bubbleContainer = document.getElementById('bubbleContainer');
-                            const bubbleCount = 20;
+                            if (!bubbleContainer) return;
+                            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                            const bubbleCount = window.innerWidth <= 768 ? 10 : 20;
+                            const frag = document.createDocumentFragment();
                             for (let i = 0; i < bubbleCount; i++) {
                                 const bubble = document.createElement('div');
                                 bubble.classList.add('bubble');
@@ -3927,12 +3957,41 @@
                                 bubble.style.animationDelay = `${Math.random() * 2}s`;
                                 bubble.style.backgroundColor = '#948979';
                                 bubble.style.opacity = Math.random() * 0.5 + 0.3;
-                                bubbleContainer.appendChild(bubble);
+                                frag.appendChild(bubble);
                             }
+                            bubbleContainer.appendChild(frag);
+                            document.addEventListener('visibilitychange', () => {
+                                bubbleContainer.style.display = document.hidden ? 'none' : '';
+                            });
                         }
                 
                         // Initialize bubble effect
                         createBubbles();
+                
+                        // Lazy-load the exhibition video (same 3.5MB file as the
+                        // hero) only when its section scrolls near the viewport,
+                        // so it never competes with the initial page load.
+                        (function () {
+                            const v = document.querySelector('.video-wrapper video[data-src]');
+                            if (!v) return;
+                            const load = () => {
+                                if (v.dataset.loaded) return;
+                                v.dataset.loaded = '1';
+                                v.src = v.dataset.src;
+                                const p = v.play();
+                                if (p && typeof p.catch === 'function') p.catch(() => {});
+                            };
+                            if ('IntersectionObserver' in window) {
+                                const io = new IntersectionObserver((entries) => {
+                                    for (const e of entries) {
+                                        if (e.isIntersecting) { load(); io.disconnect(); break; }
+                                    }
+                                }, { rootMargin: '250px' });
+                                io.observe(v);
+                            } else {
+                                load();
+                            }
+                        })();
                         
                         // Smooth scrolling for anchor links
                         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -4461,16 +4520,14 @@
             console.error('Language toggle button not found');
         }
 
-                        // Hero video behavior:
-                        //   - Desktop (>768px): autoplay muted/looping. Play
-                        //     button stays hidden (CSS display:none).
-                        //   - Mobile (≤768px): do NOT autoplay (mobile OSes
-                        //     block autoplay anyway and would just freeze on
-                        //     frame 1). Show a custom centered play button.
-                        //     Tapping it starts the video and hides the button.
+                        // Hero background video: autoplays on desktop AND mobile.
+                        // muted + playsinline allow autoplay on iOS/Android with
+                        // NO user interaction and NO play button. No poster image
+                        // is used — only the video itself is shown as background —
+                        // and playback retries automatically if the browser
+                        // blocks the very first attempt.
                         document.addEventListener('DOMContentLoaded', () => {
                             const heroVideo = document.getElementById('heroVideo');
-                            const playBtn = document.getElementById('heroPlayBtn');
                             if (!heroVideo) return;
 
                             heroVideo.muted = true;
@@ -4479,50 +4536,27 @@
                             heroVideo.setAttribute('webkit-playsinline', '');
                             heroVideo.removeAttribute('controls');
 
-                            const isMobile = window.innerWidth <= 768;
-
-                            const startPlayback = () => {
+                            const tryPlay = () => {
                                 const p = heroVideo.play();
-                                if (p && typeof p.then === 'function') {
-                                    return p.catch(() => {});
-                                }
+                                if (p && typeof p.catch === 'function') p.catch(() => {});
                             };
 
-                            const hidePlayBtn = () => {
-                                if (playBtn) playBtn.classList.add('hidden');
-                            };
-
-                            // Hide the play button as soon as the video
-                            // actually starts playing (covers desktop autoplay,
-                            // and ensures mobile button vanishes the moment the
-                            // user taps it).
-                            heroVideo.addEventListener('playing', hidePlayBtn, { once: false });
-
-                            if (isMobile) {
-                                // On mobile: do NOT try to autoplay. Wait for
-                                // user tap on the custom play button.
-                                if (playBtn) {
-                                    playBtn.addEventListener('click', (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        startPlayback();
-                                    }, { passive: false });
-                                }
+                            if (heroVideo.readyState >= 3) {
+                                tryPlay();
                             } else {
-                                // On desktop: try autoplay (muted). If it
-                                // works, the 'playing' event hides the button
-                                // (no-op because it's display:none anyway).
-                                // If it doesn't work for any reason, the button
-                                // also serves as a manual fallback.
-                                if (playBtn) {
-                                    playBtn.addEventListener('click', (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        startPlayback();
-                                    }, { passive: false });
-                                }
-                                startPlayback();
+                                heroVideo.addEventListener('canplay', tryPlay, { once: true });
                             }
+
+                            // Safety nets: some mobile browsers only permit
+                            // playback after a user gesture or when the tab
+                            // becomes visible again — retry silently then.
+                            document.addEventListener('visibilitychange', () => {
+                                if (!document.hidden && heroVideo.paused) tryPlay();
+                            });
+                            window.addEventListener('pointerdown', function onFirstGesture() {
+                                window.removeEventListener('pointerdown', onFirstGesture);
+                                if (heroVideo.paused) tryPlay();
+                            }, { passive: true });
                         });
                 
                         // Translation functions
@@ -5870,7 +5904,7 @@
                                         </div>
                                         <div class="door-modal-body">
                                             <div class="door-modal-image">
-                                                <img src="${door.image}" alt="${door.title}">
+                                                <img loading="lazy" decoding="async" src="${door.image}" alt="${door.title}">
                                             </div>
                                             <div class="door-modal-info">
                                                 <div class="door-description">
@@ -6652,24 +6686,135 @@
                             if (typing) typing.remove();
                         }
                         
+                        // ---- Groq AI backend (via Netlify Function) ----
+                        // The GROQ_API_KEY lives ONLY in the Netlify environment.
+                        // The browser never sees it: it talks to our own serverless
+                        // function, which proxies the request to Groq securely.
+                        const CHAT_ENDPOINT = '/.netlify/functions/chat';
+                        const chatHistory = []; // conversation context for this session
+                        let chatBusy = false;   // prevents duplicate requests while one is in flight
+
+                        function chatLang() {
+                            return (typeof currentLanguage !== 'undefined' && ['sq', 'en', 'fr', 'de'].includes(currentLanguage)) ? currentLanguage : 'sq';
+                        }
+
+                        // Localized error messages for every failure mode.
+                        function chatError(kind) {
+                            const M = {
+                                localFile: {
+                                    sq: 'Asistenti AI punon vetëm kur faqja është publikuar (Netlify). Nëse e hapni skedarin direkt nga kompjuteri, funksionet e serverit nuk ekzistojnë — publikoni faqen ose përdorni "netlify dev" për testim.',
+                                    en: 'The AI assistant only works on the published site (Netlify). Opening the file directly from your computer has no server functions — deploy the site or use "netlify dev" to test locally.',
+                                    fr: 'L’assistant IA ne fonctionne que sur le site publié (Netlify). Ouvrir le fichier directement depuis votre ordinateur ne fournit pas les fonctions serveur — déployez le site ou utilisez « netlify dev ».',
+                                    de: 'Der KI-Assistent funktioniert nur auf der veröffentlichten Seite (Netlify). Beim direkten Öffnen der Datei vom Computer gibt es keine Server-Funktionen — Seite veröffentlichen oder „netlify dev“ verwenden.'
+                                },
+                                notConfigured: {
+                                    sq: 'Asistenti AI nuk është konfiguruar ende në server. Shtoni variablin GROQ_API_KEY te Netlify → Site settings → Environment variables dhe publikoni përsëri.',
+                                    en: 'The AI assistant is not configured yet on the server. Add the GROQ_API_KEY variable under Netlify → Site settings → Environment variables and redeploy.',
+                                    fr: 'L’assistant IA n’est pas encore configuré sur le serveur. Ajoutez la variable GROQ_API_KEY dans Netlify → Site settings → Environment variables puis redéployez.',
+                                    de: 'Der KI-Assistent ist auf dem Server noch nicht konfiguriert. Fügen Sie die Variable GROQ_API_KEY unter Netlify → Site settings → Environment variables hinzu und veröffentlichen Sie erneut.'
+                                },
+                                rateLimited: {
+                                    sq: 'Asistenti po merr shumë kërkesa për momentin. Ju lutem pritni një minutë dhe provoni përsëri.',
+                                    en: 'The assistant is receiving too many requests right now. Please wait a minute and try again.',
+                                    fr: 'L’assistant reçoit trop de requêtes pour le moment. Veuillez patienter une minute et réessayer.',
+                                    de: 'Der Assistent erhält gerade zu viele Anfragen. Bitte warten Sie eine Minute und versuchen Sie es erneut.'
+                                },
+                                generic: {
+                                    sq: 'Nuk munda të lidhem me asistentin AI tani. Ju lutem provoni përsëri pas pak.',
+                                    en: 'I could not reach the AI assistant right now. Please try again in a moment.',
+                                    fr: 'Je n’ai pas pu joindre l’assistant IA pour le moment. Veuillez réessayer dans un instant.',
+                                    de: 'Der KI-Assistent ist momentan nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.'
+                                }
+                            };
+                            return (M[kind] || M.generic)[chatLang()] || M.generic.en;
+                        }
+
+                        // One attempt at the chat endpoint. Resolves with the
+                        // reply text or rejects with an error kind string.
+                        async function askChatEndpoint(attempt) {
+                            const controller = new AbortController();
+                            const timeout = setTimeout(() => controller.abort(), 25000);
+                            try {
+                                const res = await fetch(CHAT_ENDPOINT, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        messages: chatHistory.slice(-16),
+                                        language: chatLang()
+                                    }),
+                                    signal: controller.signal
+                                });
+
+                                let data = null;
+                                try { data = await res.json(); } catch (_) { /* non-JSON error page */ }
+
+                                if (res.ok && data && data.reply && String(data.reply).trim()) {
+                                    return String(data.reply);
+                                }
+                                if (res.status === 500 && data && data.error === 'not_configured') throw 'notConfigured';
+                                if (res.status === 429) throw 'rateLimited';
+                                if (!res.ok) throw 'generic';
+                                throw 'generic';
+                            } catch (err) {
+                                if (typeof err === 'string') throw err;      // our own kinds pass through
+                                if (attempt === 0 && !(err instanceof DOMException && err.name === 'AbortError')) {
+                                    throw 'retry';                            // transient network issue → retry once
+                                }
+                                throw 'generic';
+                            } finally {
+                                clearTimeout(timeout);
+                            }
+                        }
+
                         // Function to send message
-                        function sendMessage() {
+                        async function sendMessage() {
                             const message = chatbotInput.value.trim();
-                            if (!message) return;
-                            
+                            if (!message || chatBusy) return; // ignore empty input & block duplicates
+
+                            // The serverless function does not exist when the HTML
+                            // file is opened straight from disk — fail fast with a
+                            // helpful message instead of a confusing timeout.
+                            if (window.location.protocol === 'file:') {
+                                addMessage(message, true);
+                                showTyping();
+                                setTimeout(() => { hideTyping(); addMessage(chatError('localFile')); }, 400);
+                                return;
+                            }
+
+                            chatBusy = true;
+                            if (chatbotSend) chatbotSend.disabled = true;
+
                             // Add user message
                             addMessage(message, true);
                             chatbotInput.value = '';
-                            
+                            chatHistory.push({ role: 'user', content: message });
+
                             // Show typing indicator
                             showTyping();
-                            
-                            // Simulate bot thinking
-                            setTimeout(() => {
+
+                            try {
+                                let reply;
+                                try {
+                                    reply = await askChatEndpoint(0);
+                                } catch (kind) {
+                                    if (kind !== 'retry') throw kind;
+                                    await new Promise(r => setTimeout(r, 900)); // brief pause before retry
+                                    reply = await askChatEndpoint(1);
+                                }
+
+                                chatHistory.push({ role: 'assistant', content: reply });
                                 hideTyping();
-                                const response = getBotResponse(message);
-                                addMessage(response);
-                            }, 1000 + Math.random() * 1000);
+                                addMessage(reply);
+                            } catch (kind) {
+                                // Do not pretend a static FAQ reply came from AI.
+                                // Keep the conversation intact and show a useful,
+                                // localized error so the user can retry.
+                                hideTyping();
+                                addMessage(chatError(typeof kind === 'string' ? kind : 'generic'));
+                            } finally {
+                                chatBusy = false;
+                                if (chatbotSend) chatbotSend.disabled = false;
+                            }
                         }
                         
                         // Event listeners
