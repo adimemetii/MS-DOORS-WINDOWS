@@ -6,9 +6,9 @@
 // (Site settings → Environment variables) and is NEVER exposed to the
 // frontend. No key is hardcoded anywhere in this repository.
 //
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Using the requested high-performance model via OpenRouter.
+// Using the GPT-OSS 120B model as available on GroqCloud.
 const MODEL_CHAIN = [
   'openai/gpt-oss-120b'
 ];
