@@ -3042,6 +3042,27 @@
         .chatbot-header h3 i {
             font-size: 1.1rem;
         }
+
+        .chatbot-clear {
+            margin-left: auto;
+            margin-right: 0.35rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #FFFFFF;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-clear:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(-45deg);
+        }
         
         .chatbot-close {
             background: rgba(255, 255, 255, 0.2);
@@ -3083,6 +3104,31 @@
         .chatbot-messages::-webkit-scrollbar-thumb {
             background: #B8A896;
             border-radius: 3px;
+        }
+
+        .chatbot-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-top: 0.25rem;
+        }
+
+        .chatbot-suggestion {
+            border: 1px solid #B8A896;
+            border-radius: 16px;
+            padding: 0.45rem 0.7rem;
+            background: #FFFFFF;
+            color: #393E46;
+            font-size: 0.78rem;
+            line-height: 1.25;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .chatbot-suggestion:hover {
+            background: #B8A896;
+            color: #FFFFFF;
         }
         
         .message {
@@ -6155,6 +6201,9 @@
                     <div class="chatbot-window" id="chatbotWindow">
                         <div class="chatbot-header">
                             <h3><i class="fas fa-robot"></i> Asistent Virtual</h3>
+                            <button class="chatbot-clear" id="chatbotClear" type="button" title="Pastro bisedën" aria-label="Pastro bisedën">
+                                <i class="fas fa-rotate-left"></i>
+                            </button>
                             <button class="chatbot-close" id="chatbotClose">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -6168,6 +6217,7 @@
                                     Përshëndetje! Unë jam asistenti virtual i MS Doors & Windows. Si mund t'ju ndihmoj sot? Mund të më pyesni për shërbimet tona, koleksionet, çmimet, ose çdo gjë tjetër!
                                 </div>
                             </div>
+                            <div class="chatbot-suggestions" id="chatbotSuggestions" aria-label="Sugjerime pyetjesh"></div>
                         </div>
                         <div class="chatbot-input-container">
                             <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Shkruani pyetjen tuaj...">
@@ -6182,7 +6232,9 @@
                         const chatbotToggle = document.getElementById('chatbotToggle');
                         const chatbotWindow = document.getElementById('chatbotWindow');
                         const chatbotClose = document.getElementById('chatbotClose');
+                        const chatbotClear = document.getElementById('chatbotClear');
                         const chatbotMessages = document.getElementById('chatbotMessages');
+                        const chatbotSuggestions = document.getElementById('chatbotSuggestions');
                         const chatbotInput = document.getElementById('chatbotInput');
 
                         // Chatbot UI translations
@@ -6190,22 +6242,26 @@
                             sq: {
                                 header: 'Asistent Virtual',
                                 placeholder: 'Shkruani pyetjen tuaj...',
-                                greeting: "Përshëndetje! Unë jam asistenti virtual i MS Doors & Windows. Si mund t'ju ndihmoj sot? Mund të më pyesni për shërbimet tona, koleksionet, çmimet, ose çdo gjë tjetër!"
+                                greeting: "Përshëndetje! Unë jam asistenti virtual i MS Doors & Windows. Si mund t'ju ndihmoj sot? Mund të më pyesni për shërbimet tona, koleksionet, çmimet, ose çdo gjë tjetër!",
+                                clear: 'Pastro bisedën', suggestions: ['Çfarë shërbimesh ofroni?', 'Cilat janë koleksionet?', 'Si mund të kërkoj një ofertë?']
                             },
                             en: {
                                 header: 'Virtual Assistant',
                                 placeholder: 'Type your question...',
-                                greeting: "Hello! I am the virtual assistant of MS Doors & Windows. How can I help you today? You can ask me about our services, collections, prices, or anything else!"
+                                greeting: "Hello! I am the virtual assistant of MS Doors & Windows. How can I help you today? You can ask me about our services, collections, prices, or anything else!",
+                                clear: 'Clear chat', suggestions: ['What services do you offer?', 'What collections are available?', 'How can I request a quote?']
                             },
                             fr: {
                                 header: 'Assistant Virtuel',
                                 placeholder: 'Tapez votre question...',
-                                greeting: "Bonjour! Je suis l'assistant virtuel de MS Doors & Windows. Comment puis-je vous aider aujourd'hui? Vous pouvez me poser des questions sur nos services, collections, prix, ou tout autre chose!"
+                                greeting: "Bonjour! Je suis l'assistant virtuel de MS Doors & Windows. Comment puis-je vous aider aujourd'hui? Vous pouvez me poser des questions sur nos services, collections, prix, ou tout autre chose!",
+                                clear: 'Effacer la conversation', suggestions: ['Quels services proposez-vous?', 'Quelles collections proposez-vous?', 'Comment demander un devis?']
                             },
                             de: {
                                 header: 'Virtueller Assistent',
                                 placeholder: 'Geben Sie Ihre Frage ein...',
-                                greeting: "Hallo! Ich bin der virtuelle Assistent von MS Doors & Windows. Wie kann ich Ihnen heute helfen? Sie können mich zu unseren Dienstleistungen, Kollektionen, Preisen oder zu allem anderen fragen!"
+                                greeting: "Hallo! Ich bin der virtuelle Assistent von MS Doors & Windows. Wie kann ich Ihnen heute helfen? Sie können mich zu unseren Dienstleistungen, Kollektionen, Preisen oder zu allem anderen fragen!",
+                                clear: 'Chat löschen', suggestions: ['Welche Dienstleistungen bieten Sie an?', 'Welche Kollektionen gibt es?', 'Wie kann ich ein Angebot anfordern?']
                             }
                         };
 
@@ -6222,10 +6278,32 @@
                             if (chatbotInput) {
                                 chatbotInput.placeholder = ui.placeholder;
                             }
+                            if (chatbotClear) {
+                                chatbotClear.title = ui.clear;
+                                chatbotClear.setAttribute('aria-label', ui.clear);
+                            }
+                            renderChatSuggestions(ui.suggestions);
                             const firstBotMessage = chatbotMessages ? chatbotMessages.querySelector('.message.bot .message-content') : null;
                             if (firstBotMessage) {
                                 firstBotMessage.textContent = ui.greeting;
                             }
+                        }
+
+                        function renderChatSuggestions(suggestions) {
+                            const container = document.getElementById('chatbotSuggestions');
+                            if (!container) return;
+                            container.innerHTML = '';
+                            (suggestions || []).forEach((suggestion) => {
+                                const button = document.createElement('button');
+                                button.type = 'button';
+                                button.className = 'chatbot-suggestion';
+                                button.textContent = suggestion;
+                                button.addEventListener('click', () => {
+                                    chatbotInput.value = suggestion;
+                                    sendMessage();
+                                });
+                                container.appendChild(button);
+                            });
                         }
                         const chatbotSend = document.getElementById('chatbotSend');
                         
@@ -6685,11 +6763,21 @@
                             const typing = document.getElementById('typingIndicator');
                             if (typing) typing.remove();
                         }
+
+                        function clearChat() {
+                            if (chatBusy) return;
+                            chatHistory.length = 0;
+                            const ui = chatbotUIText[chatLang()] || chatbotUIText.sq;
+                            chatbotMessages.innerHTML = '';
+                            addMessage(ui.greeting);
+                            chatbotMessages.appendChild(chatbotSuggestions);
+                            renderChatSuggestions(ui.suggestions);
+                        }
                         
-                        // ---- Groq AI backend (via Netlify Function) ----
-                        // The GROQ_API_KEY lives ONLY in the Netlify environment.
+                        // ---- OpenRouter AI backend (via Netlify Function) ----
+                        // The OPENROUTER_API_KEY lives ONLY in the Netlify environment.
                         // The browser never sees it: it talks to our own serverless
-                        // function, which proxies the request to Groq securely.
+                        // function, which proxies the request to OpenRouter securely.
                         const CHAT_ENDPOINT = '/.netlify/functions/chat';
                         const chatHistory = []; // conversation context for this session
                         let chatBusy = false;   // prevents duplicate requests while one is in flight
@@ -6708,10 +6796,10 @@
                                     de: 'Der KI-Assistent funktioniert nur auf der veröffentlichten Seite (Netlify). Beim direkten Öffnen der Datei vom Computer gibt es keine Server-Funktionen — Seite veröffentlichen oder „netlify dev“ verwenden.'
                                 },
                                 notConfigured: {
-                                    sq: 'Asistenti AI nuk është konfiguruar ende në server. Shtoni variablin GROQ_API_KEY te Netlify → Site settings → Environment variables dhe publikoni përsëri.',
-                                    en: 'The AI assistant is not configured yet on the server. Add the GROQ_API_KEY variable under Netlify → Site settings → Environment variables and redeploy.',
-                                    fr: 'L’assistant IA n’est pas encore configuré sur le serveur. Ajoutez la variable GROQ_API_KEY dans Netlify → Site settings → Environment variables puis redéployez.',
-                                    de: 'Der KI-Assistent ist auf dem Server noch nicht konfiguriert. Fügen Sie die Variable GROQ_API_KEY unter Netlify → Site settings → Environment variables hinzu und veröffentlichen Sie erneut.'
+                                    sq: 'Asistenti AI nuk është konfiguruar ende në server. Shtoni variablin OPENROUTER_API_KEY te Netlify → Site settings → Environment variables dhe publikoni përsëri.',
+                                    en: 'The AI assistant is not configured yet on the server. Add the OPENROUTER_API_KEY variable under Netlify → Site settings → Environment variables and redeploy.',
+                                    fr: 'L’assistant IA n’est pas encore configuré sur le serveur. Ajoutez la variable OPENROUTER_API_KEY dans Netlify → Site settings → Environment variables puis redéployez.',
+                                    de: 'Der KI-Assistent ist auf dem Server noch nicht konfiguriert. Fügen Sie die Variable OPENROUTER_API_KEY unter Netlify → Site settings → Environment variables hinzu und veröffentlichen Sie erneut.'
                                 },
                                 rateLimited: {
                                     sq: 'Asistenti po merr shumë kërkesa për momentin. Ju lutem pritni një minutë dhe provoni përsëri.',
@@ -6842,6 +6930,8 @@
                         chatbotClose.addEventListener('click', () => {
                             chatbotWindow.classList.remove('active');
                         });
+
+                        chatbotClear.addEventListener('click', clearChat);
                         
                         chatbotSend.addEventListener('click', sendMessage);
                         

@@ -25,7 +25,10 @@
       "Bash(awk -F: '$1 < 2244')",
       "Bash(mkdir -p jstest)",
       "Bash(sed -n '/<script>/,/<\\\\/script>/p' index.html)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8765/index.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8765/index.html)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Update chatbot to use Groq API, enhance professional behavior, and add UI improvements *)",
+      "Bash(git push *)"
     ]
   }
 }
