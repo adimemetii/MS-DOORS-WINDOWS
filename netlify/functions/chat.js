@@ -6,12 +6,11 @@
 // (Site settings → Environment variables) and is NEVER exposed to the
 // frontend. No key is hardcoded anywhere in this repository.
 //
-const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Groq models are known for extreme speed and professionalism.
+// Using the requested high-performance model via OpenRouter.
 const MODEL_CHAIN = [
-  'llama-3.3-70b-versatile',
-  'llama3-8b-8192'
+  'openai/gpt-oss-120b'
 ];
 
 const SYSTEM_PROMPT = `You are the professional, high-efficiency AI assistant for MS Doors & Windows, a premium doors and windows company based in Skifteraj, 61000, Kosovo.
